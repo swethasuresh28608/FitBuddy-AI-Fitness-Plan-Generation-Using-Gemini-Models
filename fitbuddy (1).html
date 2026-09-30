@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FitBuddy – AI Fitness Plan Generator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--chalk:#EEF2EE;--ink:#12241F;--pine:#1F5A45;--blue:#2E5BFF;--sun:#FFD23F;--card:#fff;--line:#CBD6CF;--mute:#5B6F66}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--chalk);color:var(--ink);font:16px/1.6 'DM Sans',system-ui,sans-serif}
+h1,h2,h3{font-family:'Bricolage Grotesque','DM Sans',sans-serif;line-height:1.1;margin:0}
+header{display:flex;justify-content:space-between;align-items:center;padding:16px 5vw;border-bottom:2px solid var(--ink)}
+.logo{font:800 1.5rem 'Bricolage Grotesque',sans-serif}
+.logo span{background:var(--sun);padding:0 6px;border-radius:6px}
+nav a{margin-left:20px;color:var(--ink);text-decoration:none;font-weight:500}
+nav a:hover{text-decoration:underline}
+.hero{padding:48px 5vw 24px;max-width:1200px;margin:auto}
+.hero h1{font-size:clamp(2.2rem,6vw,4.4rem);max-width:14ch}
+.hero p{max-width:56ch;color:var(--mute);font-size:1.1rem}
+main{max-width:1200px;margin:auto;padding:16px 5vw 48px;display:grid;grid-template-columns:380px 1fr;gap:28px;align-items:start}
+@media(max-width:900px){main{grid-template-columns:1fr}}
+.panel{background:var(--card);border:2px solid var(--ink);border-radius:14px;padding:22px;box-shadow:6px 6px 0 var(--ink)}
+.panel h2{font-size:1.4rem;margin-bottom:14px}
+label{display:block;font-size:.85rem;font-weight:700;margin:12px 0 4px}
+input,select,textarea{width:100%;padding:10px;border:1.5px solid var(--line);border-radius:8px;font:inherit;background:#fff;color:var(--ink)}
+input:focus,select:focus,textarea:focus,button:focus-visible{outline:3px solid var(--blue);outline-offset:1px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+button{font:700 1rem 'DM Sans',sans-serif;cursor:pointer;border:2px solid var(--ink);border-radius:10px;padding:12px 16px}
+.go{width:100%;margin-top:18px;background:var(--blue);color:#fff}
+.go:hover{background:#1f45d6}
+.alt{background:var(--sun);color:var(--ink);width:100%;margin-top:10px}
+.ghost{background:#fff;padding:8px 12px;font-size:.9rem}
+.key{background:#F6F8F6;border:1.5px dashed var(--line);border-radius:10px;padding:10px;margin-bottom:6px}
+.key small{color:var(--mute)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin:16px 0}
+.stat{background:var(--pine);color:#fff;border-radius:10px;padding:12px}
+.stat b{display:block;font:800 1.7rem 'Bricolage Grotesque',sans-serif}
+.stat span{font-size:.8rem;opacity:.85}
+.day{border:1.5px solid var(--line);border-radius:10px;margin:10px 0;overflow:hidden}
+.day summary{cursor:pointer;padding:12px 14px;font-weight:700;background:#F6F8F6;display:flex;justify-content:space-between;gap:10px}
+.day summary em{font-style:normal;font-weight:500;color:var(--pine)}
+table{width:100%;border-collapse:collapse;font-size:.92rem}
+th,td{text-align:left;padding:8px 14px;border-top:1px solid var(--line)}
+th{color:var(--mute);font-weight:500}
+.meal{padding:10px 0;border-top:1px solid var(--line)}
+.meal:first-of-type{border-top:0}
+.tips li{margin:6px 0}
+.empty{color:var(--mute);text-align:center;padding:50px 10px}
+.err{background:#FFE9E6;border:1.5px solid #D6402B;border-radius:8px;padding:10px;margin-top:12px;font-size:.9rem}
+.loader{display:none;text-align:center;padding:40px}
+.loader.on{display:block}
+.spin{width:38px;height:38px;border:5px solid var(--line);border-top-color:var(--blue);border-radius:50%;margin:0 auto 10px;animation:s 1s linear infinite}
+@keyframes s{to{transform:rotate(360deg)}}
+.about{max-width:1200px;margin:auto;padding:0 5vw 48px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px}
+.about div{border-left:5px solid var(--sun);padding-left:14px}
+.about h3{font-size:1.1rem;margin-bottom:4px}
+footer{text-align:center;padding:20px;border-top:2px solid var(--ink);color:var(--mute);font-size:.9rem}
+@media print{header,.hero,form-panel,.panel:first-child,.about,footer,.noprint{display:none!important}main{display:block}.panel{box-shadow:none;border:0}}
+@media(prefers-reduced-motion:reduce){.spin{animation:none}html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">Fit<span>Buddy</span></div>
+  <nav><a href="#gen">Generator</a><a href="#about">How it works</a></nav>
+</header>
+
+<section class="hero">
+  <h1>A workout and meal plan built for you.</h1>
+  <p>Enter your body details and goal. FitBuddy asks Google's Gemini model to write a weekly training plan, a daily diet and tips that match your level and equipment.</p>
+</section>
+
+<main id="gen">
+  <div class="panel">
+    <h2>Your details</h2>
+    <div class="key">
+      <label for="key" style="margin-top:0">Gemini API key</label>
+      <input id="key" type="password" placeholder="Paste key from aistudio.google.com" autocomplete="off">
+      <small>Stays in your browser only. No key? Use the demo plan below.</small>
+      <label for="model">Model</label>
+      <select id="model">
+        <option value="gemini-2.5-flash">gemini-2.5-flash (fast)</option>
+        <option value="gemini-2.5-pro">gemini-2.5-pro (detailed)</option>
+        <option value="gemini-2.0-flash">gemini-2.0-flash</option>
+      </select>
+    </div>
+    <label for="name">Name</label>
+    <input id="name" placeholder="Your name" value="">
+    <div class="row">
+      <div><label for="age">Age</label><input id="age" type="number" min="14" max="90" value="21"></div>
+      <div><label for="gender">Gender</label><select id="gender"><option>Male</option><option>Female</option><option>Other</option></select></div>
+      <div><label for="h">Height (cm)</label><input id="h" type="number" min="120" max="230" value="170"></div>
+      <div><label for="w">Weight (kg)</label><input id="w" type="number" min="30" max="250" value="68"></div>
+    </div>
+    <label for="goal">Goal</label>
+    <select id="goal"><option>Lose fat</option><option>Build muscle</option><option>Stay fit</option><option>Improve stamina</option></select>
+    <div class="row">
+      <div><label for="level">Level</label><select id="level"><option>Beginner</option><option>Intermediate</option><option>Advanced</option></select></div>
+      <div><label for="days">Days per week</label><select id="days"><option>3</option><option selected>4</option><option>5</option><option>6</option></select></div>
+    </div>
+    <label for="equip">Equipment</label>
+    <select id="equip"><option>No equipment (home)</option><option>Dumbbells at home</option><option>Full gym</option></select>
+    <label for="diet">Diet</label>
+    <select id="diet"><option>Vegetarian</option><option>Non-vegetarian</option><option>Vegan</option><option>Eggetarian</option></select>
+    <label for="notes">Injuries or notes (optional)</label>
+    <textarea id="notes" rows="2" placeholder="e.g. knee pain, only 30 minutes a day"></textarea>
+    <button class="go" id="gen-btn">Generate with Gemini</button>
+    <button class="alt" id="demo-btn">Generate demo plan (no key)</button>
+    <div id="err"></div>
+  </div>
+
+  <div class="panel" id="out">
+    <h2>Your plan</h2>
+    <div class="loader" id="loader"><div class="spin"></div>Gemini is writing your plan…</div>
+    <div id="result"><p class="empty">Fill in your details and press Generate. Your plan appears here.</p></div>
+  </div>
+</main>
+
+<section class="about" id="about">
+  <div><h3>1. You share details</h3><p>Age, height, weight, goal, level, equipment and diet.</p></div>
+  <div><h3>2. Prompt goes to Gemini</h3><p>The app sends your profile with strict instructions to return a JSON plan.</p></div>
+  <div><h3>3. Plan is shown</h3><p>BMI and calories are calculated in the browser. Workouts, meals and tips come from the model.</p></div>
+</section>
+<footer>FitBuddy is a learning project. It is not medical advice. Check with a doctor before starting a new program.</footer>
+
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+try { $('key').value = localStorage.getItem('fb_key') || ''; } catch (e) {}
+
+function getProfile() {
+  const p = {
+    name: $('name').value.trim() || 'Friend', age: +$('age').value, gender: $('gender').value,
+    height: +$('h').value, weight: +$('w').value, goal: $('goal').value, level: $('level').value,
+    days: +$('days').value, equip: $('equip').value, diet: $('diet').value, notes: $('notes').value.trim()
+  };
+  p.bmi = +(p.weight / Math.pow(p.height / 100, 2)).toFixed(1);
+  const bmr = 10 * p.weight + 6.25 * p.height - 5 * p.age + (p.gender === 'Female' ? -161 : 5);
+  const tdee = bmr * (p.days >= 5 ? 1.6 : p.days >= 3 ? 1.5 : 1.375);
+  const adj = { 'Lose fat': -400, 'Build muscle': 300, 'Stay fit': 0, 'Improve stamina': 100 }[p.goal];
+  p.calories = Math.round((tdee + adj) / 10) * 10;
+  return p;
+}
+
+function valid(p) {
+  if (!(p.age >= 14 && p.age <= 90)) return 'Enter an age between 14 and 90.';
+  if (!(p.height >= 120 && p.height <= 230)) return 'Enter a height between 120 and 230 cm.';
+  if (!(p.weight >= 30 && p.weight <= 250)) return 'Enter a weight between 30 and 250 kg.';
+  return '';
+}
+
+async function askGemini(p, key, model) {
+  const prompt = `You are FitBuddy, a certified-style fitness coach. Create a safe, practical plan for this person.
+Profile: ${JSON.stringify(p)}
+Rules: exactly ${p.days} training days in weekly_plan; use only equipment: ${p.equip}; meals must match diet: ${p.diet}; respect notes/injuries; use Indian-friendly foods where suitable.
+Return ONLY valid JSON, no markdown, in this shape:
+{"summary":"2 short sentences","protein_g":number,"water_l":number,
+"weekly_plan":[{"day":"Day 1","focus":"text","exercises":[{"name":"text","sets":number,"reps":"text","rest":"text"}]}],
+"meals":[{"meal":"Breakfast","items":"text"},{"meal":"Lunch","items":"text"},{"meal":"Snack","items":"text"},{"meal":"Dinner","items":"text"}],
+"tips":["text","text","text"]}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(key)}`;
+  const r = await fetch(url, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.7, responseMimeType: 'application/json' } })
+  });
+  if (!r.ok) {
+    const e = await r.json().catch(() => ({}));
+    throw new Error(e.error?.message || 'Request failed (' + r.status + ')');
+  }
+  const d = await r.json();
+  const text = (d.candidates?.[0]?.content?.parts || []).map(x => x.text || '').join('');
+  if (!text) throw new Error('Gemini returned an empty answer. Try again.');
+  return JSON.parse(text.replace(/```json|```/g, '').trim());
+}
+
+function demoPlan(p) {
+  const home = p.equip !== 'Full gym';
+  const push = home ? [['Push-ups',3,'10-15'],['Pike push-ups',3,'8-10'],['Bench dips',3,'12']] : [['Bench press',3,'8-10'],['Shoulder press',3,'10'],['Triceps pushdown',3,'12']];
+  const pull = home ? [['Backpack rows',3,'12'],['Superman hold',3,'30 sec'],['Towel curls',3,'12']] : [['Lat pulldown',3,'10'],['Seated row',3,'10'],['Dumbbell curl',3,'12']];
+  const legs = home ? [['Bodyweight squats',4,'15'],['Lunges',3,'10 each'],['Glute bridge',3,'15']] : [['Squat',4,'8-10'],['Leg press',3,'12'],['Leg curl',3,'12']];
+  const core = [['Plank',3,'40 sec'],['Bicycle crunch',3,'20'],['Mountain climbers',3,'30 sec']];
+  const cardio = [['Brisk walk or jog',1,'25 min'],['Jumping jacks',3,'40 sec'],['High knees',3,'30 sec']];
+  const sets = [['Push day',push],['Pull day',pull],['Leg day',legs],['Core and cardio',[...core.slice(0,2),...cardio.slice(0,1)]],['Full body',[push[0],pull[0],legs[0]]],['Cardio',cardio]];
+  const weekly = sets.slice(0, p.days).map((s, i) => ({
+    day: 'Day ' + (i + 1), focus: s[0],
+    exercises: s[1].map(e => ({ name: e[0], sets: e[1], reps: e[2], rest: '60 sec' }))
+  }));
+  const veg = p.diet !== 'Non-vegetarian';
+  return {
+    summary: `Demo plan for ${p.goal.toLowerCase()} at ${p.level.toLowerCase()} level. Add a Gemini key to get a fully personalised plan.`,
+    protein_g: Math.round(p.weight * (p.goal === 'Build muscle' ? 1.8 : 1.4)), water_l: 3, weekly_plan: weekly,
+    meals: [
+      { meal: 'Breakfast', items: veg ? 'Vegetable oats or 2 idli with sambar, 1 glass milk' : '3-egg omelette, 2 toast, banana' },
+      { meal: 'Lunch', items: veg ? '2 chapati, dal, paneer or sprouts, curd, salad' : 'Rice, grilled chicken or fish, vegetables, curd' },
+      { meal: 'Snack', items: 'Roasted chana or peanuts with fruit' },
+      { meal: 'Dinner', items: veg ? 'Vegetable soup, 2 chapati, tofu or paneer curry' : 'Chapati, egg curry or chicken stew, salad' }
+    ],
+    tips: ['Warm up 5 minutes before and stretch after.', 'Sleep 7-8 hours; muscles grow during rest.', 'Increase weights or reps slowly each week.']
+  };
+}
+
+function bmiLabel(b) { return b < 18.5 ? 'Underweight' : b < 25 ? 'Healthy' : b < 30 ? 'Overweight' : 'Obese'; }
+
+function render(plan, p) {
+  const days = (plan.weekly_plan || []).map((d, i) => `
+    <details class="day" ${i === 0 ? 'open' : ''}>
+      <summary><span>${esc(d.day)}</span><em>${esc(d.focus)}</em></summary>
+      <table><tr><th>Exercise</th><th>Sets</th><th>Reps</th><th>Rest</th></tr>
+      ${(d.exercises || []).map(e => `<tr><td>${esc(e.name)}</td><td>${esc(e.sets)}</td><td>${esc(e.reps)}</td><td>${esc(e.rest)}</td></tr>`).join('')}
+      </table>
+    </details>`).join('');
+  const meals = (plan.meals || []).map(m => `<div class="meal"><b>${esc(m.meal)}</b><br>${esc(m.items)}</div>`).join('');
+  const tips = (plan.tips || []).map(t => `<li>${esc(t)}</li>`).join('');
+  $('result').innerHTML = `
+    <p><b>${esc(p.name)}</b>, ${esc(plan.summary)}</p>
+    <div class="stats">
+      <div class="stat"><b>${p.bmi}</b><span>BMI · ${bmiLabel(p.bmi)}</span></div>
+      <div class="stat"><b>${p.calories}</b><span>kcal per day</span></div>
+      <div class="stat"><b>${esc(plan.protein_g)} g</b><span>protein per day</span></div>
+      <div class="stat"><b>${esc(plan.water_l)} L</b><span>water per day</span></div>
+    </div>
+    <h3 style="margin:18px 0 6px">Weekly workout</h3>${days}
+    <h3 style="margin:18px 0 6px">Daily meals</h3>${meals}
+    <h3 style="margin:18px 0 6px">Tips</h3><ul class="tips">${tips}</ul>
+    <button class="ghost noprint" onclick="window.print()">Print or save as PDF</button>`;
+}
+
+async function run(useGemini) {
+  $('err').innerHTML = '';
+  const p = getProfile();
+  const bad = valid(p);
+  if (bad) { $('err').innerHTML = `<div class="err">${bad}</div>`; return; }
+  const key = $('key').value.trim();
+  if (useGemini && !key) { $('err').innerHTML = '<div class="err">Paste your Gemini API key first, or use the demo plan.</div>'; return; }
+  $('result').innerHTML = ''; $('loader').classList.add('on');
+  $('gen-btn').disabled = $('demo-btn').disabled = true;
+  try {
+    let plan;
+    if (useGemini) {
+      try { localStorage.setItem('fb_key', key); } catch (e) {}
+      plan = await askGemini(p, key, $('model').value);
+    } else plan = demoPlan(p);
+    render(plan, p);
+    $('out').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } catch (e) {
+    $('err').innerHTML = `<div class="err">Could not create the plan: ${esc(e.message)}. Check your key and internet, then try again.</div>`;
+    $('result').innerHTML = '<p class="empty">No plan yet.</p>';
+  } finally {
+    $('loader').classList.remove('on');
+    $('gen-btn').disabled = $('demo-btn').disabled = false;
+  }
+}
+$('gen-btn').addEventListener('click', () => run(true));
+$('demo-btn').addEventListener('click', () => run(false));
+</script>
+</body>
+</html>
